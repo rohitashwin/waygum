@@ -54,17 +54,11 @@ impl Parser {
 
     pub fn parse_section(&mut self) -> Result<Option<Element>, ParseError> {
         let section_token = self.next().unwrap();
-        let section_contents = match self.next() {
-            Some(Token::Text(str_contents)) => str_contents,
-            Some(token) => {
-                return Err(
-                    ParseError::UnexpectedToken(
-                        format!("'Text' was expected but encountered {:?}", token)
-                    )
-                );
-            }
-            None => String::new(),
-        };
+        let section_contents = match self.peek() {
+			Some(Token::Text(_) | Token::Bold | Token::Italics | Token::Strikethrough | Token::Code) => {
+				self.parse_text()?
+			}
+		};
         Ok(Some(Element::Section(section_contents)))
     }
 
@@ -245,7 +239,7 @@ impl Parser {
         Ok(Some(Element::Strikethrough(strikethrough_contents)))
     }
 
-    pub fn parse_text(&mut self) -> Result<Option<Element>, ParseError> {
+    pub fn parse_text(&mut self) -> Result<Option<TextElement>, ParseError> {
 		let mut text_contents = vec![];
 		loop {
 			match self.peek() {
@@ -284,20 +278,22 @@ impl Parser {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum TextElement {
+	Raw(String),
+	Bold(String),
+	Italics(String),
+	Code(String),
+	Strikethrough(String),
+}
+
+#[derive(Debug, PartialEq)]
 enum Element {
-    Section(String),
-    Subsection(String),
-    Subsubsection(String),
-	// FIXME: Using vec for now, but should be an RC or a Box
-    ListItem(Vec<Element>),
+    Section(TextElement),
+    Subsection(TextElement),
+    Subsubsection(TextElement),
+    ListItem(TextElement),
     List(Vec<Element>),
-    Quote(String),
-    Bold(String),
-    Italics(String),
-    Code(String),
-    Strikethrough(String),
-	PureText(String),
-    Text(Vec<Element>),
+    Quote(TextElement),
 }
 
 #[derive(Debug)]

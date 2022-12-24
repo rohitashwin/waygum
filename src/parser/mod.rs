@@ -1,5 +1,5 @@
 use super::lexer::{ self, * };
-use std::{ error::Error };
+use std::{ error::Error, vec, rc::Rc };
 mod tests;
 
 pub struct Parser {
@@ -29,15 +29,15 @@ impl Parser {
             Some(Token::Subsection) => self.parse_subsection(),
             Some(Token::Subsubsection) => self.parse_subsubsection(),
             Some(Token::List(list_depth)) => {
-				self.current_list_depth = 1;
-				self.parse_list()
-			},
-            // Some(Token::Quote) => self.parse_quote(),
-            // Some(Token::Bold) => self.parse_bold(),
-            // Some(Token::Italics) => self.parse_italics(),
-            // Some(Token::Code) => self.parse_code(),
-            // Some(Token::Strikethrough) => self.parse_strikethrough(),
-            // Some(Token::Text(str_contents)) => self.parse_text(),
+                self.current_list_depth = 1;
+                self.parse_list()
+            },
+			Some(Token::Quote) => self.parse_quote(),
+			Some(Token::Bold) => self.parse_bold(),
+			Some(Token::Italics) => self.parse_italics(),
+			Some(Token::Strikethrough) => self.parse_strikethrough(),
+			Some(Token::Code) => self.parse_code(),
+			Some(Token::Text(_)) => self.parse_text(),
             Some(Token::EOF) => Ok(None),
             _ => Ok(None),
             None => Err(ParseError::UnexpectedToken("Unkown token encountered".to_string())),
@@ -100,12 +100,6 @@ impl Parser {
         Ok(Some(Element::Subsubsection(subsubsection_contents)))
     }
 
-	/*
-		- Hello, World!
-		-- Hello, World!
-		List(1) Text("Hello, World!") List(2) Text("Hello, World!")
-	*/
-
     pub fn parse_list(&mut self) -> Result<Option<Element>, ParseError> {
         dbg!("Parse List Called");
         let mut list_items = vec![];
@@ -138,7 +132,7 @@ impl Parser {
                     }
                 }
                 _ => {
-					return Ok(Some(Element::List(list_items)));
+                    return Ok(Some(Element::List(list_items)));
                 }
             }
         }
@@ -152,21 +146,12 @@ impl Parser {
                 Some(Token::List(ListDepth(depth))) => {
                     if *depth == self.current_list_depth {
                         let list_marker = self.next();
-                        let list_content = match self.peek() {
-                            Some(Token::Text(_)) => {
-                                if let Token::Text(content) = self.next().unwrap() {
-                                    content
-                                } else {
-                                    return Err(
-                                        ParseError::UnexpectedToken(
-                                            "Unrecoverable parse error encountered.".to_string()
-                                        )
-                                    );
-                                }
-                            }
-                            _ => String::new(),
-                        };
-                        contents.push(Element::ListItem(list_content));
+                        let list_content = self.parse_text()?.ok_or(
+							ParseError::UnexpectedToken(
+								format!("Unexpected List Parse Error")
+							)
+						)?;
+                        contents.push(Element::ListItem(vec![list_content]));
                     } else {
                         break;
                     }
@@ -176,8 +161,125 @@ impl Parser {
                 }
             }
         }
-		dbg!(&contents);
+        dbg!(&contents);
         Ok(contents)
+    }
+
+    pub fn parse_quote(&mut self) -> Result<Option<Element>, ParseError> {
+        let quote_token = self.next().unwrap();
+        let quote_contents = match self.next() {
+            Some(Token::Text(str_contents)) => str_contents,
+            Some(token) => {
+                return Err(
+                    ParseError::UnexpectedToken(
+                        format!("'Text' token expected, but found {:?}", token)
+                    )
+                );
+            }
+            None => String::new(),
+        };
+        Ok(Some(Element::Quote(quote_contents)))
+    }
+
+    pub fn parse_bold(&mut self) -> Result<Option<Element>, ParseError> {
+        let bold_token = self.next().unwrap();
+        let bold_contents = match self.next() {
+            Some(Token::Text(str_contents)) => str_contents,
+            Some(token) => {
+                return Err(
+                    ParseError::UnexpectedToken(
+                        format!("'Text' token expected, but found {:?}", token)
+                    )
+                );
+            }
+            None => String::new(),
+        };
+        Ok(Some(Element::Bold(bold_contents)))
+    }
+
+    pub fn parse_italics(&mut self) -> Result<Option<Element>, ParseError> {
+        let italics_token = self.next().unwrap();
+        let italics_contents = match self.next() {
+            Some(Token::Text(str_contents)) => str_contents,
+            Some(token) => {
+                return Err(
+                    ParseError::UnexpectedToken(
+                        format!("'Text' token expected, but found {:?}", token)
+                    )
+                );
+            }
+            None => String::new(),
+        };
+        Ok(Some(Element::Italics(italics_contents)))
+    }
+
+    pub fn parse_code(&mut self) -> Result<Option<Element>, ParseError> {
+        let code_token = self.next().unwrap();
+        let code_contents = match self.next() {
+            Some(Token::Text(str_contents)) => str_contents,
+            Some(token) => {
+                return Err(
+                    ParseError::UnexpectedToken(
+                        format!("'Text' token expected, but found {:?}", token)
+                    )
+                );
+            }
+            None => String::new(),
+        };
+        Ok(Some(Element::Code(code_contents)))
+    }
+
+    pub fn parse_strikethrough(&mut self) -> Result<Option<Element>, ParseError> {
+        let strikethrough_token = self.next().unwrap();
+        let strikethrough_contents = match self.next() {
+            Some(Token::Text(str_contents)) => str_contents,
+            Some(token) => {
+                return Err(
+                    ParseError::UnexpectedToken(
+                        format!("'Text' token expected, but found {:?}", token)
+                    )
+                );
+            }
+            None => String::new(),
+        };
+        Ok(Some(Element::Strikethrough(strikethrough_contents)))
+    }
+
+    pub fn parse_text(&mut self) -> Result<Option<Element>, ParseError> {
+		let mut text_contents = vec![];
+		loop {
+			match self.peek() {
+				Some(Token::Text(_)) => {
+					let text_token = self.next().unwrap();
+					if let Token::Text(str_contents) = text_token {
+						text_contents.push(Element::PureText(str_contents));
+					}
+				},
+				Some(Token::Bold) => {
+					if let Some(bold_element) = self.parse_bold()? {
+						text_contents.push(bold_element);
+					}
+				},
+				Some(Token::Italics) => {
+					if let Some(italics_element) = self.parse_italics()? {
+						text_contents.push(italics_element);
+					}
+				},
+				Some(Token::Code) => {
+					if let Some(code_element) = self.parse_code()? {
+						text_contents.push(code_element);
+					}
+				},
+				Some(Token::Strikethrough) => {
+					if let Some(strikethrough_element) = self.parse_strikethrough()? {
+						text_contents.push(strikethrough_element);
+					}
+				},
+				_ => {
+					return Ok(Some(Element::Text(text_contents)));
+				}
+			}
+		}
     }
 }
 
@@ -186,14 +288,16 @@ enum Element {
     Section(String),
     Subsection(String),
     Subsubsection(String),
-    ListItem(String),
+	// FIXME: Using vec for now, but should be an RC or a Box
+    ListItem(Vec<Element>),
     List(Vec<Element>),
     Quote(String),
     Bold(String),
     Italics(String),
     Code(String),
     Strikethrough(String),
-    Text(String),
+	PureText(String),
+    Text(Vec<Element>),
 }
 
 #[derive(Debug)]

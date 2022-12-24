@@ -1,6 +1,7 @@
+#[cfg(test)]
 use crate::lexer::{ Lexer, Token, ListDepth };
 #[test]
-fn test_advance() {
+fn advance() {
     let sample = "TTTTTHello, World";
     let mut lexer = Lexer::new(sample);
     let output = lexer.advance_while(|c| {
@@ -11,7 +12,7 @@ fn test_advance() {
 }
 
 #[test]
-fn test_tokenize() {
+fn tokenize() {
     let sample = "Hello, World";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -19,7 +20,7 @@ fn test_tokenize() {
 }
 
 #[test]
-fn test_heading() {
+fn heading() {
     let sample = "# Hello, World";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -27,7 +28,7 @@ fn test_heading() {
 }
 
 #[test]
-fn test_subsection() {
+fn subsection() {
     let sample = "## Hello, World";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -35,7 +36,7 @@ fn test_subsection() {
 }
 
 #[test]
-fn test_subsubsection() {
+fn subsubsection() {
     let sample = "### Hello, World";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -45,7 +46,7 @@ fn test_subsubsection() {
 }
 
 #[test]
-fn test_list() {
+fn list() {
     let sample = "- Hello, World";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -56,7 +57,7 @@ fn test_list() {
 }
 
 #[test]
-fn test_list2() {
+fn list2() {
     let sample = "-- Hello, World";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -67,7 +68,7 @@ fn test_list2() {
 }
 
 #[test]
-fn test_quote() {
+fn quote() {
     let sample = "> Hello, World";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -75,7 +76,7 @@ fn test_quote() {
 }
 
 #[test]
-fn test_bold() {
+fn bold() {
     let sample = "* Hello, World *";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -87,7 +88,7 @@ fn test_bold() {
 }
 
 #[test]
-fn test_italics() {
+fn italics() {
     let sample = "/ Hello, World /";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -104,7 +105,7 @@ fn test_italics() {
 }
 
 #[test]
-fn test_code() {
+fn code() {
     let sample = "` Hello, World `";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -116,7 +117,7 @@ fn test_code() {
 }
 
 #[test]
-fn test_strikethrough() {
+fn strikethrough() {
     let sample = "~ Hello, World ~";
     let mut lexer = Lexer::new(sample);
     let output = lexer.tokenize();
@@ -133,7 +134,7 @@ fn test_strikethrough() {
 }
 
 #[test]
-fn test_sample() {
+fn long_sample_1() {
     let sample =
         "# This is a section\n## This is a subsection\n- This is a list item\n- This is another list item\n> This is a quote\n*This is bold*\n/This is italics/\n`This is code`\n~This is strikethrough~";
     let mut lexer = Lexer::new(sample);
@@ -170,7 +171,7 @@ fn test_sample() {
 }
 
 #[test]
-fn test_sample_2() {
+fn long_sample_2() {
     let sample =
         "# Hello, World
 This is the hello world section of this document.

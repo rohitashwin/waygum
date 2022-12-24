@@ -11,7 +11,7 @@ impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
         Self {
             tokens: tokens.into_iter().rev().collect(),
-            current_list_depth: 0,
+            current_list_depth: 1,
         }
     }
 
@@ -28,7 +28,10 @@ impl Parser {
             Some(Token::Section) => self.parse_section(),
             Some(Token::Subsection) => self.parse_subsection(),
             Some(Token::Subsubsection) => self.parse_subsubsection(),
-            Some(Token::List(list_depth)) => self.parse_list(),
+            Some(Token::List(list_depth)) => {
+				self.current_list_depth = 1;
+				self.parse_list()
+			},
             // Some(Token::Quote) => self.parse_quote(),
             // Some(Token::Bold) => self.parse_bold(),
             // Some(Token::Italics) => self.parse_italics(),
@@ -36,17 +39,17 @@ impl Parser {
             // Some(Token::Strikethrough) => self.parse_strikethrough(),
             // Some(Token::Text(str_contents)) => self.parse_text(),
             Some(Token::EOF) => Ok(None),
-			_ => Ok(None),
+            _ => Ok(None),
             None => Err(ParseError::UnexpectedToken("Unkown token encountered".to_string())),
         }
     }
 
     pub fn parse(&mut self) -> Result<Vec<Element>, ParseError> {
         let mut elements: Vec<Element> = vec![];
-		while let Some(element) = self.parse_next()? {
-			elements.push(element);
-		}
-		Ok(elements)
+        while let Some(element) = self.parse_next()? {
+            elements.push(element);
+        }
+        Ok(elements)
     }
 
     pub fn parse_section(&mut self) -> Result<Option<Element>, ParseError> {
@@ -97,14 +100,84 @@ impl Parser {
         Ok(Some(Element::Subsubsection(subsubsection_contents)))
     }
 
+	/*
+		- Hello, World!
+		-- Hello, World!
+		List(1) Text("Hello, World!") List(2) Text("Hello, World!")
+	*/
+
     pub fn parse_list(&mut self) -> Result<Option<Element>, ParseError> {
-        // let Token::List(ListDepth(depth)) = self.peek().unwrap();
-        todo!()
+        dbg!("Parse List Called");
+        let mut list_items = vec![];
+        loop {
+            let next_item_ref = match self.peek() {
+                Some(token) => token,
+                None => {
+                    return Ok(None);
+                }
+            };
+            match next_item_ref {
+                Token::List(ListDepth(depth)) => {
+                    dbg!("Parsing List Depth: {:?}", depth);
+                    if *depth < self.current_list_depth {
+                        self.current_list_depth -= 1;
+                        return Ok(Some(Element::List(list_items)));
+                    } else if *depth > self.current_list_depth {
+                        self.current_list_depth += 1;
+                        list_items.push(
+                            self
+                                .parse_list()?
+                                .ok_or(
+                                    ParseError::UnexpectedToken(
+                                        format!("Unexpected List Parse Error")
+                                    )
+                                )?
+                        );
+                    } else {
+                        list_items.extend(self.parse_list_items()?);
+                    }
+                }
+                _ => {
+					return Ok(Some(Element::List(list_items)));
+                }
+            }
+        }
     }
 
-    pub fn parse_list_item(&mut self) -> Result<Vec<Element>, ParseError> {
-        let mut contents: Vec<String> = vec![];
-        todo!()
+    pub fn parse_list_items(&mut self) -> Result<Vec<Element>, ParseError> {
+        dbg!("Parse List Items Called");
+        let mut contents = vec![];
+        loop {
+            match self.peek() {
+                Some(Token::List(ListDepth(depth))) => {
+                    if *depth == self.current_list_depth {
+                        let list_marker = self.next();
+                        let list_content = match self.peek() {
+                            Some(Token::Text(_)) => {
+                                if let Token::Text(content) = self.next().unwrap() {
+                                    content
+                                } else {
+                                    return Err(
+                                        ParseError::UnexpectedToken(
+                                            "Unrecoverable parse error encountered.".to_string()
+                                        )
+                                    );
+                                }
+                            }
+                            _ => String::new(),
+                        };
+                        contents.push(Element::ListItem(list_content));
+                    } else {
+                        break;
+                    }
+                }
+                _ => {
+                    break;
+                }
+            }
+        }
+		dbg!(&contents);
+        Ok(contents)
     }
 }
 

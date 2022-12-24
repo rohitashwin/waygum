@@ -5,8 +5,6 @@ mod tests;
 pub struct Lexer<'lt> {
     input: &'lt str,
     pos: usize,
-    current_lexical_context: Token,
-    line_beginning: bool,
 }
 
 #[derive(Debug, PartialEq)]
@@ -33,8 +31,6 @@ impl<'lt> Lexer<'lt> {
         Self {
             input,
             pos: 0,
-            current_lexical_context: Token::EOF,
-            line_beginning: true,
         }
     }
 

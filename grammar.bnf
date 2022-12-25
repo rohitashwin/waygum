@@ -1,0 +1,11 @@
+<char> ::= [any unicode]
+<string> ::= <char>+
+<bold> ::= '*' <string> '*'
+<italics> ::= '/' <string> '/'
+<strikethrough> ::= '~' <string> '~'
+<code> ::= '`' <string> '`'
+<text> ::= <string> | <bold> | <italics> | <strikethrough> | <code>
+<quote> ::= '>' <text>
+<list_marker> ::= '-'
+<list_element> ::= <list_marker>+ <text>
+<list> ::= <list_element> | <list>

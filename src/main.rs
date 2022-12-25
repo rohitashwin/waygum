@@ -13,8 +13,6 @@ struct Opts {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let opts: Opts = Opts::parse();
-	let input = std::fs::read_to_string(opts.input)?;
-	let stylesheet = std::fs::read_to_string(opts.stylesheet)?;
-	let html = convert_to_html(&input, &stylesheet)?;
+	let html = convert_to_html(&opts.input, &opts.stylesheet)?;
 	Ok(())
 }

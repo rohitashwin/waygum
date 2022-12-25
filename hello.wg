@@ -1,15 +1,22 @@
-# Hello, World!
+# Introduction to C++
 
-This is a sample markup language that I wrote. It is an interesting project. I plan on using this for writing my blogs and stuff.
-I got to learn `rust` by making this project. Took me about 3 days to complete, but that's because I have experience making parsers and stuff with C++.
+C++ is a high level, Object Oriented, language designed by Bjarne Stroustrup. It was designed as a successor to C to improve it's features and bring Objects using classes.
 
-The implementation should be simple enough that anyone can easily add new features.
+> C++ was designed by Bjarne Stroustrup
 
-Some basic funcitonality includes:
-# Section Headings
-- Lists
--- Nested Lists
-- List
-## Subsections
-Some example styles: `code` *bold* /italics/ ~strikethrough~
-> Blockquotes
+### Features of C++
+
+- Object Oriented design
+-- Inheritence
+-- Polymorphism
+- Compiled Language
+- Feature Rich
+- Mature Libraries
+- ~Simple~ (C++ is definitely not simple)
+
+### Sample
+
+/A basic C++ program to print hello world/
+
+- This can then be printed by:
+`int main() { std::cout << "Hello, World!" << std::endl; }`

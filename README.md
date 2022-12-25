@@ -2,6 +2,12 @@
 
 A simple markup language.
 
+### How to run?
+
+```
+cargo run -- -i <input.wg> -s <style.css>
+```
+
 ### Screenshot
 
 ![Screenshot 2022-12-25 at 3 07 27 PM](https://user-images.githubusercontent.com/119449399/209467324-5e4b5917-ae55-48f7-971c-522fb9f6bb0b.png)

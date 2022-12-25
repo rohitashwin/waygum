@@ -5,7 +5,7 @@ A simple markup language.
 ### How to run?
 
 ```
-cargo run -- -i <input.wg> -s <style.css>
+cargo run -- -i <path/to/input.wg> -s <path/to/style.css>
 ```
 
 ### Screenshot

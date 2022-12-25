@@ -1,5 +1,5 @@
 use super::lexer::{ self, * };
-use std::{ error::Error, vec, rc::Rc };
+use std::{ error::Error, vec };
 mod tests;
 
 pub struct Parser {
@@ -15,32 +15,33 @@ impl Parser {
         }
     }
 
-    pub fn peek(&self) -> Option<&Token> {
+    fn peek(&self) -> Option<&Token> {
         self.tokens.last()
     }
 
-    pub fn next(&mut self) -> Option<Token> {
+    fn next(&mut self) -> Option<Token> {
         self.tokens.pop()
     }
 
-    pub fn parse_next(&mut self) -> Result<Option<Element>, ParseError> {
+    fn parse_next(&mut self) -> Result<Option<Element>, ParseError> {
         match self.peek() {
             Some(Token::Section) => self.parse_section(),
             Some(Token::Subsection) => self.parse_subsection(),
             Some(Token::Subsubsection) => self.parse_subsubsection(),
-            Some(Token::List(list_depth)) => {
+            Some(Token::List(_)) => {
                 self.current_list_depth = 1;
                 self.parse_list()
-            },
-			Some(Token::Quote) => self.parse_quote(),
-			Some(Token::Bold) => self.parse_bold(),
-			Some(Token::Italics) => self.parse_italics(),
-			Some(Token::Strikethrough) => self.parse_strikethrough(),
-			Some(Token::Code) => self.parse_code(),
-			Some(Token::Text(_)) => self.parse_text(),
+            }
+            Some(Token::Quote) => self.parse_quote(),
+            Some(
+                Token::Bold | Token::Italics | Token::Strikethrough | Token::Code | Token::Text(_),
+            ) => self.parse_paragraph(),
             Some(Token::EOF) => Ok(None),
-            _ => Ok(None),
-            None => Err(ParseError::UnexpectedToken("Unkown token encountered".to_string())),
+            Some(Token::Newline) => {
+                self.next();
+                self.parse_next()
+            }
+            _ => Err(ParseError::UnexpectedToken("Unknown token encountered".to_string())),
         }
     }
 
@@ -52,61 +53,49 @@ impl Parser {
         Ok(elements)
     }
 
-    pub fn parse_section(&mut self) -> Result<Option<Element>, ParseError> {
-        let section_token = self.next().unwrap();
+    fn parse_section(&mut self) -> Result<Option<Element>, ParseError> {
+        let section_token = self.next();
         let section_contents = match self.peek() {
-			Some(Token::Text(_) | Token::Bold | Token::Italics | Token::Strikethrough | Token::Code) => {
-				self.parse_text()?
-			}
-		};
-        Ok(Some(Element::Section(section_contents)))
+            Some(
+                Token::Text(_) | Token::Bold | Token::Italics | Token::Strikethrough | Token::Code,
+            ) => {
+                self.parse_text()?
+            }
+            _ => Some(Text(vec![])),
+        };
+        Ok(Some(Element::Section(section_contents.unwrap())))
     }
 
-    pub fn parse_subsection(&mut self) -> Result<Option<Element>, ParseError> {
+    fn parse_subsection(&mut self) -> Result<Option<Element>, ParseError> {
         let subsection_token = self.next().unwrap();
-        let subsection_contents = match self.next() {
-            Some(Token::Text(str_contents)) => str_contents,
-            Some(token) => {
-                return Err(
-                    ParseError::UnexpectedToken(
-                        format!("'Text' token expected, but found {:?}", token)
-                    )
-                );
+        let subsection_contents = match self.peek() {
+            Some(
+                Token::Text(_) | Token::Bold | Token::Italics | Token::Strikethrough | Token::Code,
+            ) => {
+                self.parse_text()?
             }
-            None => String::new(),
+            _ => Some(Text(vec![])),
         };
-        Ok(Some(Element::Subsection(subsection_contents)))
+        Ok(Some(Element::Subsection(subsection_contents.unwrap())))
     }
 
-    pub fn parse_subsubsection(&mut self) -> Result<Option<Element>, ParseError> {
+    fn parse_subsubsection(&mut self) -> Result<Option<Element>, ParseError> {
         let subsubsection_token = self.next().unwrap();
-        let subsubsection_contents = match self.next() {
-            Some(Token::Text(str_contents)) => str_contents,
-            Some(token) => {
-                return Err(
-                    ParseError::UnexpectedToken(
-                        format!("'Text' token expected, but found {:?}", token)
-                    )
-                );
+        let subsubsection_contents = match self.peek() {
+            Some(
+                Token::Text(_) | Token::Bold | Token::Italics | Token::Strikethrough | Token::Code,
+            ) => {
+                self.parse_text()?
             }
-            None => String::new(),
+            _ => Some(Text(vec![])),
         };
-        Ok(Some(Element::Subsubsection(subsubsection_contents)))
+        Ok(Some(Element::Subsubsection(subsubsection_contents.unwrap())))
     }
-
-    pub fn parse_list(&mut self) -> Result<Option<Element>, ParseError> {
-        dbg!("Parse List Called");
+    fn parse_list(&mut self) -> Result<Option<Element>, ParseError> {
         let mut list_items = vec![];
         loop {
-            let next_item_ref = match self.peek() {
-                Some(token) => token,
-                None => {
-                    return Ok(None);
-                }
-            };
-            match next_item_ref {
-                Token::List(ListDepth(depth)) => {
-                    dbg!("Parsing List Depth: {:?}", depth);
+            match self.peek() {
+                Some(Token::List(ListDepth(depth))) => {
                     if *depth < self.current_list_depth {
                         self.current_list_depth -= 1;
                         return Ok(Some(Element::List(list_items)));
@@ -132,22 +121,185 @@ impl Parser {
         }
     }
 
-    pub fn parse_list_items(&mut self) -> Result<Vec<Element>, ParseError> {
-        dbg!("Parse List Items Called");
+    fn parse_list_items(&mut self) -> Result<Vec<Element>, ParseError> {
         let mut contents = vec![];
         loop {
             match self.peek() {
                 Some(Token::List(ListDepth(depth))) => {
                     if *depth == self.current_list_depth {
-                        let list_marker = self.next();
-                        let list_content = self.parse_text()?.ok_or(
-							ParseError::UnexpectedToken(
-								format!("Unexpected List Parse Error")
-							)
-						)?;
-                        contents.push(Element::ListItem(vec![list_content]));
+                        let _list_marker = self.next();
+                        let list_content = self
+                            .parse_text()?
+                            .ok_or(
+                                ParseError::UnexpectedToken(format!("Unexpected List Parse Error"))
+                            )?;
+                        contents.push(Element::ListItem(list_content));
                     } else {
                         break;
+                    }
+                }
+				Some(Token::Newline) => {
+					self.next();
+				}
+                _ => {
+                    break;
+                }
+            }
+        }
+        Ok(contents)
+    }
+
+    fn parse_quote(&mut self) -> Result<Option<Element>, ParseError> {
+        let _quote_token = self.next().unwrap();
+        let quote_contents = match self.peek() {
+            Some(
+                Token::Text(_) | Token::Bold | Token::Italics | Token::Strikethrough | Token::Code,
+            ) => {
+                self.parse_text()?
+            }
+            _ => Some(Text(vec![])),
+        };
+        Ok(Some(Element::Quote(quote_contents.unwrap())))
+    }
+
+    fn parse_bold(&mut self) -> Result<Option<TextElement>, ParseError> {
+        let bold_token = self.next().unwrap();
+        // consume text until next bold token
+        let mut bold_contents = String::new();
+        while let Some(token) = self.peek() {
+            match token {
+                Token::Bold => {
+                    self.next();
+                    break;
+                }
+                Token::Text(str_contents) => {
+                    bold_contents.push_str(str_contents);
+                    self.next();
+                }
+                Token::EOF => {
+                    break;
+                }
+                _ => {
+                    return Err(
+                        ParseError::UnexpectedToken(format!("Unexpected token in bold text"))
+                    );
+                }
+            }
+        }
+        Ok(Some(TextElement::Bold(bold_contents)))
+    }
+
+    fn parse_italics(&mut self) -> Result<Option<TextElement>, ParseError> {
+        let italics_token = self.next().unwrap();
+        // consume text until next italics token
+        let mut italics_contents = String::new();
+        while let Some(token) = self.peek() {
+            match token {
+                Token::Italics => {
+                    self.next();
+                    break;
+                }
+                Token::Text(str_contents) => {
+                    italics_contents.push_str(str_contents);
+                    self.next();
+                }
+                Token::EOF => {
+                    break;
+                }
+                _ => {
+                    return Err(
+                        ParseError::UnexpectedToken(format!("Unexpected token in italics text"))
+                    );
+                }
+            }
+        }
+        Ok(Some(TextElement::Italics(italics_contents)))
+    }
+
+    fn parse_code(&mut self) -> Result<Option<TextElement>, ParseError> {
+        let code_token = self.next().unwrap();
+        // consume text until next code token
+        let mut code_contents = String::new();
+        while let Some(token) = self.peek() {
+            match token {
+                Token::Code => {
+                    self.next();
+                    break;
+                }
+                Token::Text(str_contents) => {
+                    code_contents.push_str(str_contents);
+                    self.next();
+                }
+                Token::EOF => {
+                    break;
+                }
+                _ => {
+                    return Err(
+                        ParseError::UnexpectedToken(format!("Unexpected token in code text"))
+                    );
+                }
+            }
+        }
+        Ok(Some(TextElement::Code(code_contents)))
+    }
+
+    fn parse_strikethrough(&mut self) -> Result<Option<TextElement>, ParseError> {
+        let strikethrough_token = self.next().unwrap();
+        // consume text until next strikethrough token
+        let mut strikethrough_contents = String::new();
+        while let Some(token) = self.peek() {
+            match token {
+                Token::Strikethrough => {
+                    self.next();
+                    break;
+                }
+                Token::Text(str_contents) => {
+                    strikethrough_contents.push_str(str_contents);
+                    self.next();
+                }
+                Token::EOF => {
+                    break;
+                }
+                _ => {
+                    return Err(
+                        ParseError::UnexpectedToken(
+                            format!("Unexpected token in strikethrough text")
+                        )
+                    );
+                }
+            }
+        }
+        Ok(Some(TextElement::Strikethrough(strikethrough_contents)))
+    }
+
+    fn parse_text(&mut self) -> Result<Option<Text>, ParseError> {
+        let mut text_contents = vec![];
+        loop {
+            match self.peek() {
+                Some(Token::Text(_)) => {
+                    let text_token = self.next().unwrap();
+                    if let Token::Text(str_contents) = text_token {
+                        text_contents.push(TextElement::Raw(str_contents));
+                    }
+                }
+                Some(Token::Bold) => {
+                    if let Some(bold_element) = self.parse_bold()? {
+                        text_contents.push(bold_element);
+                    }
+                }
+                Some(Token::Italics) => {
+                    if let Some(italics_element) = self.parse_italics()? {
+                        text_contents.push(italics_element);
+                    }
+                }
+                Some(Token::Strikethrough) => {
+                    if let Some(strikethrough_element) = self.parse_strikethrough()? {
+                        text_contents.push(strikethrough_element);
+                    }
+                }
+                Some(Token::Code) => {
+                    if let Some(code_element) = self.parse_code()? {
+                        text_contents.push(code_element);
                     }
                 }
                 _ => {
@@ -155,145 +307,36 @@ impl Parser {
                 }
             }
         }
-        dbg!(&contents);
-        Ok(contents)
+        Ok(Some(Text(text_contents)))
     }
 
-    pub fn parse_quote(&mut self) -> Result<Option<Element>, ParseError> {
-        let quote_token = self.next().unwrap();
-        let quote_contents = match self.next() {
-            Some(Token::Text(str_contents)) => str_contents,
-            Some(token) => {
-                return Err(
-                    ParseError::UnexpectedToken(
-                        format!("'Text' token expected, but found {:?}", token)
-                    )
-                );
-            }
-            None => String::new(),
-        };
-        Ok(Some(Element::Quote(quote_contents)))
-    }
-
-    pub fn parse_bold(&mut self) -> Result<Option<Element>, ParseError> {
-        let bold_token = self.next().unwrap();
-        let bold_contents = match self.next() {
-            Some(Token::Text(str_contents)) => str_contents,
-            Some(token) => {
-                return Err(
-                    ParseError::UnexpectedToken(
-                        format!("'Text' token expected, but found {:?}", token)
-                    )
-                );
-            }
-            None => String::new(),
-        };
-        Ok(Some(Element::Bold(bold_contents)))
-    }
-
-    pub fn parse_italics(&mut self) -> Result<Option<Element>, ParseError> {
-        let italics_token = self.next().unwrap();
-        let italics_contents = match self.next() {
-            Some(Token::Text(str_contents)) => str_contents,
-            Some(token) => {
-                return Err(
-                    ParseError::UnexpectedToken(
-                        format!("'Text' token expected, but found {:?}", token)
-                    )
-                );
-            }
-            None => String::new(),
-        };
-        Ok(Some(Element::Italics(italics_contents)))
-    }
-
-    pub fn parse_code(&mut self) -> Result<Option<Element>, ParseError> {
-        let code_token = self.next().unwrap();
-        let code_contents = match self.next() {
-            Some(Token::Text(str_contents)) => str_contents,
-            Some(token) => {
-                return Err(
-                    ParseError::UnexpectedToken(
-                        format!("'Text' token expected, but found {:?}", token)
-                    )
-                );
-            }
-            None => String::new(),
-        };
-        Ok(Some(Element::Code(code_contents)))
-    }
-
-    pub fn parse_strikethrough(&mut self) -> Result<Option<Element>, ParseError> {
-        let strikethrough_token = self.next().unwrap();
-        let strikethrough_contents = match self.next() {
-            Some(Token::Text(str_contents)) => str_contents,
-            Some(token) => {
-                return Err(
-                    ParseError::UnexpectedToken(
-                        format!("'Text' token expected, but found {:?}", token)
-                    )
-                );
-            }
-            None => String::new(),
-        };
-        Ok(Some(Element::Strikethrough(strikethrough_contents)))
-    }
-
-    pub fn parse_text(&mut self) -> Result<Option<TextElement>, ParseError> {
-		let mut text_contents = vec![];
-		loop {
-			match self.peek() {
-				Some(Token::Text(_)) => {
-					let text_token = self.next().unwrap();
-					if let Token::Text(str_contents) = text_token {
-						text_contents.push(Element::PureText(str_contents));
-					}
-				},
-				Some(Token::Bold) => {
-					if let Some(bold_element) = self.parse_bold()? {
-						text_contents.push(bold_element);
-					}
-				},
-				Some(Token::Italics) => {
-					if let Some(italics_element) = self.parse_italics()? {
-						text_contents.push(italics_element);
-					}
-				},
-				Some(Token::Code) => {
-					if let Some(code_element) = self.parse_code()? {
-						text_contents.push(code_element);
-					}
-				},
-				Some(Token::Strikethrough) => {
-					if let Some(strikethrough_element) = self.parse_strikethrough()? {
-						text_contents.push(strikethrough_element);
-					}
-				},
-				_ => {
-					return Ok(Some(Element::Text(text_contents)));
-				}
-			}
-		}
+    fn parse_paragraph(&mut self) -> Result<Option<Element>, ParseError> {
+        let paragraph_contents = self.parse_text()?;
+        Ok(Some(Element::Paragraph(paragraph_contents.unwrap())))
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub enum TextElement {
-	Raw(String),
-	Bold(String),
-	Italics(String),
-	Code(String),
-	Strikethrough(String),
+enum TextElement {
+    Raw(String),
+    Bold(String),
+    Italics(String),
+    Code(String),
+    Strikethrough(String),
 }
+
+#[derive(Debug, PartialEq)]
+struct Text(Vec<TextElement>);
 
 #[derive(Debug, PartialEq)]
 enum Element {
-    Section(TextElement),
-    Subsection(TextElement),
-    Subsubsection(TextElement),
-    ListItem(TextElement),
+    Section(Text),
+    Subsection(Text),
+    Subsubsection(Text),
+    ListItem(Text),
     List(Vec<Element>),
-    Quote(TextElement),
+    Quote(Text),
+    Paragraph(Text),
 }
 
 #[derive(Debug)]

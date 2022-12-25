@@ -22,8 +22,8 @@ pub enum Token {
     Code,
     Strikethrough,
     Text(String),
+	Newline,
     EOF,
-    // TODO: Implement a Escape sequence token
 }
 
 impl<'lt> Lexer<'lt> {
@@ -62,7 +62,7 @@ impl<'lt> Lexer<'lt> {
     }
 
     pub fn advance_whitespace(&mut self) {
-        self.advance_while(|c| c.is_whitespace());
+        self.advance_while(|c| c.is_whitespace() && c != '\n');
     }
 
     pub fn tokenize(&mut self) -> Vec<Token> {
@@ -114,6 +114,11 @@ impl<'lt> Lexer<'lt> {
                     self.advance_whitespace();
                     tokens.push(Token::Strikethrough);
                 }
+				'\n' => {
+					self.advance();
+					self.advance_whitespace();
+					tokens.push(Token::Newline);
+				}
                 _ => {
                     let inline_characters = ['*', '/', '`', '~'];
                     let mut text = String::new();

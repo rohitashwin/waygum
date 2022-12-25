@@ -138,9 +138,9 @@ impl Parser {
                         break;
                     }
                 }
-				Some(Token::Newline) => {
-					self.next();
-				}
+                Some(Token::Newline) => {
+                    self.next();
+                }
                 _ => {
                     break;
                 }
@@ -316,8 +316,8 @@ impl Parser {
     }
 }
 
-#[derive(Debug, PartialEq)]
-enum TextElement {
+#[derive(Debug, PartialEq, Clone)]
+pub enum TextElement {
     Raw(String),
     Bold(String),
     Italics(String),
@@ -325,11 +325,11 @@ enum TextElement {
     Strikethrough(String),
 }
 
-#[derive(Debug, PartialEq)]
-struct Text(Vec<TextElement>);
+#[derive(Debug, PartialEq, Clone)]
+pub struct Text(pub Vec<TextElement>);
 
 #[derive(Debug, PartialEq)]
-enum Element {
+pub enum Element {
     Section(Text),
     Subsection(Text),
     Subsubsection(Text),

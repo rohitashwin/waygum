@@ -1,0 +1,15 @@
+# Hello, World!
+
+This is a sample markup language that I wrote. It is an interesting project. I plan on using this for writing my blogs and stuff.
+I got to learn `rust` by making this project. Took me about 3 days to complete, but that's because I have experience making parsers and stuff with C++.
+
+The implementation should be simple enough that anyone can easily add new features.
+
+Some basic funcitonality includes:
+# Section Headings
+- Lists
+-- Nested Lists
+- List
+## Subsections
+Some example styles: `code` *bold* /italics/ ~strikethrough~
+> Blockquotes

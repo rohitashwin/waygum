@@ -737,12 +737,12 @@ mod tests {
                             Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
                         ),
                         ParseArtefact::List(
-							vec![
-								ParseArtefact::ListItem(
-									Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-								)
-							]
-						),
+                            vec![
+                                ParseArtefact::ListItem(
+                                    Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                                )
+                            ]
+                        ),
                         ParseArtefact::ListItem(
                             Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
                         )
@@ -753,126 +753,282 @@ mod tests {
         Ok(())
     }
 
-	#[test]
-	fn parse_multilevel_list_with_paragraph() -> Result<(), Box<dyn std::error::Error>> {
-		let mut lexer = Lexer::new(String::from("- Hello world!\n-- Hello world!\n-Hello world!\n\nHello world!"));
-		let mut tokens = lexer.tokenize()?;
-		let mut parser = Parser::new(tokens);
-		let parse_result = parser.parse()?;
-		println!("{:?}", parse_result);
-		assert_eq!(
-			parse_result,
-			vec![
-				ParseArtefact::List(
-					vec![
-						ParseArtefact::ListItem(
-							Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-						),
-						ParseArtefact::List(
-							vec![
-								ParseArtefact::ListItem(
-									Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-								)
-							]
-						),
-						ParseArtefact::ListItem(
-							Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-						)
-					]
-				),
-				ParseArtefact::Paragraph(
-					vec![Text(vec![TextArtefact::Raw(String::from("Hello world!"))])]
-				)
-			]
-		);
-		Ok(())
-	}
+    #[test]
+    fn parse_multilevel_list_with_paragraph() -> Result<(), Box<dyn std::error::Error>> {
+        let mut lexer = Lexer::new(
+            String::from("- Hello world!\n-- Hello world!\n-Hello world!\n\nHello world!")
+        );
+        let mut tokens = lexer.tokenize()?;
+        let mut parser = Parser::new(tokens);
+        let parse_result = parser.parse()?;
+        println!("{:?}", parse_result);
+        assert_eq!(
+            parse_result,
+            vec![
+                ParseArtefact::List(
+                    vec![
+                        ParseArtefact::ListItem(
+                            Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                        ),
+                        ParseArtefact::List(
+                            vec![
+                                ParseArtefact::ListItem(
+                                    Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                                )
+                            ]
+                        ),
+                        ParseArtefact::ListItem(
+                            Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                        )
+                    ]
+                ),
+                ParseArtefact::Paragraph(
+                    vec![Text(vec![TextArtefact::Raw(String::from("Hello world!"))])]
+                )
+            ]
+        );
+        Ok(())
+    }
 
-	#[test]
-	fn parse_table() -> Result<(), Box<dyn std::error::Error>> {
-		let mut lexer = Lexer::new(String::from("| Hello world! | Hello world! |"));
-		let mut tokens = lexer.tokenize()?;
-		let mut parser = Parser::new(tokens);
-		let parse_result = parser.parse()?;
-		println!("{:?}", parse_result);
-		assert_eq!(
-			parse_result,
-			vec![
-				ParseArtefact::Table(
-					vec![ParseArtefact::TableRow(
-						vec![
-							Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
-							Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-						]
-				)]
-				)
-			]
-		);
-		Ok(())
-	}
+    #[test]
+    fn parse_table() -> Result<(), Box<dyn std::error::Error>> {
+        let mut lexer = Lexer::new(String::from("| Hello world! | Hello world! |"));
+        let mut tokens = lexer.tokenize()?;
+        let mut parser = Parser::new(tokens);
+        let parse_result = parser.parse()?;
+        println!("{:?}", parse_result);
+        assert_eq!(
+            parse_result,
+            vec![
+                ParseArtefact::Table(
+                    vec![
+                        ParseArtefact::TableRow(
+                            vec![
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                            ]
+                        )
+                    ]
+                )
+            ]
+        );
+        Ok(())
+    }
 
-	#[test]
-	fn parse_multiline_table() -> Result<(), Box<dyn std::error::Error>> {
-		let mut lexer = Lexer::new(String::from("| Hello world! | Hello world! |\n| Hello world! | Hello world! |"));
-		let mut tokens = lexer.tokenize()?;
-		let mut parser = Parser::new(tokens);
-		let parse_result = parser.parse()?;
-		println!("{:?}", parse_result);
-		assert_eq!(
-			parse_result,
-			vec![
-				ParseArtefact::Table(
-					vec![
-						ParseArtefact::TableRow(
-							vec![
-								Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
-								Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-							]
-						),
-						ParseArtefact::TableRow(
-							vec![
-								Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
-								Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-							]
-						)
-					]
-				)
-			]
-		);
-		Ok(())
-	}
+    #[test]
+    fn parse_multiline_table() -> Result<(), Box<dyn std::error::Error>> {
+        let mut lexer = Lexer::new(
+            String::from("| Hello world! | Hello world! |\n| Hello world! | Hello world! |")
+        );
+        let mut tokens = lexer.tokenize()?;
+        let mut parser = Parser::new(tokens);
+        let parse_result = parser.parse()?;
+        println!("{:?}", parse_result);
+        assert_eq!(
+            parse_result,
+            vec![
+                ParseArtefact::Table(
+                    vec![
+                        ParseArtefact::TableRow(
+                            vec![
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                            ]
+                        ),
+                        ParseArtefact::TableRow(
+                            vec![
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                            ]
+                        )
+                    ]
+                )
+            ]
+        );
+        Ok(())
+    }
 
-	#[test]
-	fn parse_multiline_table_with_paragraph() -> Result<(), Box<dyn std::error::Error>> {
-		let mut lexer = Lexer::new(String::from("| Hello world! | Hello world! |\n| Hello world! | Hello world! |\n\nHello world!"));
-		let mut tokens = lexer.tokenize()?;
-		let mut parser = Parser::new(tokens);
-		let parse_result = parser.parse()?;
-		println!("{:?}", parse_result);
-		assert_eq!(
-			parse_result,
-			vec![
-				ParseArtefact::Table(
-					vec![
-						ParseArtefact::TableRow(
-							vec![
-								Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
-								Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-							]
-						),
-						ParseArtefact::TableRow(
-							vec![
-								Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
-								Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
-							]
-						)
-					]
-				),
-				ParseArtefact::Paragraph(
-					vec![Text(vec![TextArtefact::Raw(String::from("Hello world!"))])]
-				)
-			]
-		);
-		Ok(())
-	}
+    #[test]
+    fn parse_multiline_table_with_paragraph() -> Result<(), Box<dyn std::error::Error>> {
+        let mut lexer = Lexer::new(
+            String::from(
+                "| Hello world! | Hello world! |\n| Hello world! | Hello world! |\n\nHello world!"
+            )
+        );
+        let mut tokens = lexer.tokenize()?;
+        let mut parser = Parser::new(tokens);
+        let parse_result = parser.parse()?;
+        println!("{:?}", parse_result);
+        assert_eq!(
+            parse_result,
+            vec![
+                ParseArtefact::Table(
+                    vec![
+                        ParseArtefact::TableRow(
+                            vec![
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                            ]
+                        ),
+                        ParseArtefact::TableRow(
+                            vec![
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                            ]
+                        )
+                    ]
+                ),
+                ParseArtefact::Paragraph(
+                    vec![Text(vec![TextArtefact::Raw(String::from("Hello world!"))])]
+                )
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn parse_multiline_table_with_list() -> Result<(), Box<dyn std::error::Error>> {
+        let mut lexer = Lexer::new(
+            String::from(
+                "| Hello world! | Hello world! |\n| Hello world! | Hello world! |\n\n* Hello world!"
+            )
+        );
+        let mut tokens = lexer.tokenize()?;
+        let mut parser = Parser::new(tokens);
+        let parse_result = parser.parse()?;
+        println!("{:?}", parse_result);
+        assert_eq!(
+            parse_result,
+            vec![
+                ParseArtefact::Table(
+                    vec![
+                        ParseArtefact::TableRow(
+                            vec![
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                            ]
+                        ),
+                        ParseArtefact::TableRow(
+                            vec![
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))]),
+                                Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                            ]
+                        )
+                    ]
+                ),
+                ParseArtefact::List(
+                    vec![
+                        ParseArtefact::ListItem(
+                            Text(vec![TextArtefact::Raw(String::from("Hello world!"))])
+                        )
+                    ]
+                )
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn sample_document_no_assert() {
+        let mut lexer = Lexer::new(
+            String::from(
+                r#"@ Learning C++
+/ Learning Objectives: Learn the basics of C++ /
+
+@@ History of C++
+C++ was developed by Bjarne Stroustrup at Bell Labs in the 1980s. It was originally called C with Classes, but was renamed C++ in 1983. C++ is a superset of C, which means that all valid C programs are also valid C++ programs. C++ is an object-oriented language, which means that it is designed to allow programmers to create their own data types. C++ is a compiled language, which means that it must be translated into machine code before it can be run. C++ is a statically typed language, which means that the type of a variable must be known at compile time. C++ is a strongly typed language, which means that the type of a variable cannot be changed. C++ is a case-sensitive language, which means that the names of variables, functions, and classes are case-sensitive. C++ is a free-form language, which means that the programmer can choose how to format the code. C++ is a multi-paradigm language, which means that it supports multiple programming styles. C++ is a general-purpose language, which means that it can be used to write any type of program.
+
+> C++ was developed by Bjarne Stroustrup
+
+!bjarne-stroustrup.jpg!Bjarne Stroustrup at the 2012 C++Now conference.
+
+@@ Some Characterisitcs of C++
+- Object oriented
+- Compiled
+-- Translated into machine code
+- Statically typed
+- Strongly typed
+- Case-sensitive
+- Free-form
+- Multi-paradigm
+- General-purpose
+
+@@ Sample C++ Program
+$$$
+#include <iostream>
+
+int main() {
+	std::cout << "Hello, World!" << std::endl;
+	return 0;
+}
+$$$
+
+/ This program prints "Hello, World!" to the screen. /
+
+@@ Compiling C++ Programs
+C++ programs must be compiled before they can be run. The compiler translates the C++ code into machine code. The compiler is usually called g++ on Linux and Mac OS X, and cl on Windows. The compiler is usually invoked with the following command:
+$$$
+g++ -o program program.cpp
+$$$
+/ This command compiles the C++ program program.cpp and creates an executable program. /
+
+@@ Running C++ Programs
+C++ programs are run by executing the executable file that was created by the compiler. The executable file is usually called a.out on Linux and Mac OS X, and program.exe on Windows. The executable file is usually invoked with the following command:
+$$$
+./a.out
+$$$
+/ This command runs the C++ program a.out. /
+
+@@ Keywords
+C++ has a number of keywords that are reserved and cannot be used as variable names. The following is a list of the most commonly used keywords:
+| name | description |
+| int | integer |
+| float | floating-point number |
+| double | double-precision floating-point number |
+| char | character |
+| bool | boolean |
+| void | no return value |
+| true | boolean true |
+| false | boolean false |
+| if | if statement |
+| else | else statement |
+| while | while loop |
+| for | for loop |
+| break | break statement |
+| continue | continue statement |
+| return | return statement |"#
+            )
+        );
+        let mut tokens = lexer.tokenize().unwrap();
+        let mut parser = Parser::new(tokens);
+        let parse_result = parser.parse().unwrap();
+        println!("{:?}", parse_result);
+    }
+
+    #[test]
+    fn sample_document() {
+        let mut lexer = Lexer::new(
+            String::from(
+                r#"@ Code Block
+$$$
+// Sample javascript express server
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+
+app.get('/', (req, res) => {
+	res.send('Hello World!');
+});
+
+app.listen(port, () => {
+	console.log(`Example app listening at http://localhost:${port}`);
+});
+
+$$$
+"#
+            )
+        );
+    }
 }

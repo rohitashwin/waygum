@@ -8,7 +8,7 @@ lazy_static! {
     static ref LIST: FancyRegex = FancyRegex::new(r#"(^-+)\s*(\S.*)$"#).unwrap();
     static ref QUOTE: FancyRegex = FancyRegex::new(r#"^>(?!>)\s*(\S.*)$"#).unwrap();
     static ref TABLE: FancyRegex = FancyRegex::new(r#"^\|(.*)\|$"#).unwrap();
-    static ref IMAGE: FancyRegex = FancyRegex::new(r#"^!\[(.*)\]\((.*)\)$"#).unwrap();
+    static ref IMAGE: FancyRegex = FancyRegex::new(r#"^#\[(.*)\]\((.*)\)$"#).unwrap();
     static ref CODEBLOCK: FancyRegex = FancyRegex::new(r"^\$\$\$").unwrap();
     static ref TEXT: FancyRegex = FancyRegex::new(r#"^(.*)$"#).unwrap();
     static ref BUTTON: FancyRegex = FancyRegex::new(r#"^#!\[([^\]]*)\]\{([^\}]*)\}$"#).unwrap();
@@ -35,6 +35,7 @@ pub enum Token {
         link: String,
     },
     Text(String),
+	// TODO: Add Latex Support
     Newline,
     EOF,
 }
@@ -178,7 +179,7 @@ mod tests {
 
     #[test]
     fn image() -> Result<(), fancy_regex::Error> {
-        let input = String::from("![Caption](path/to/image)");
+        let input = String::from("#[Caption](path/to/image)");
         let lexer = Lexer::new(input);
         let tokens = lexer.tokenize()?;
         assert_eq!(
@@ -299,7 +300,7 @@ mod tests {
     #[test]
     fn basic_all() -> Result<(), fancy_regex::Error> {
         let input = String::from(
-            "@ Heading\n\nText\n\n> Quote\n\n| Col1 | Col2 | Col3 |\n\n![Caption](path/to/image)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$"
+            "@ Heading\n\nText\n\n> Quote\n\n| Col1 | Col2 | Col3 |\n\n#[Caption](path/to/image)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$"
         );
         let lexer = Lexer::new(input);
         let tokens = lexer.tokenize()?;
@@ -330,7 +331,7 @@ mod tests {
     #[test]
     fn basic_all_with_newline() -> Result<(), fancy_regex::Error> {
         let input = String::from(
-            "@ Heading\n\nText\n\n> Quote\n\n| Col1 | Col2 | Col3 |\n\n![Caption](path/to/image)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$\n"
+            "@ Heading\n\nText\n\n> Quote\n\n| Col1 | Col2 | Col3 |\n\n#[Caption](path/to/image)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$\n"
         );
         let lexer = Lexer::new(input);
         let tokens = lexer.tokenize()?;
@@ -361,7 +362,7 @@ mod tests {
     #[test]
     fn complex_all() -> Result<(), fancy_regex::Error> {
         let input = String::from(
-            "@ Heading\n\nText\n\n> Quote\n\n| Col1 | Col2 | Col3 |\n\n![Caption](path/to/image)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$\n\n@@ Heading 2\n\nText 2\n\n> Quote 2\n\n| Col1 | Col2 | Col3 |\n\n![Caption 2](path/to/image/2)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$"
+            "@ Heading\n\nText\n\n> Quote\n\n| Col1 | Col2 | Col3 |\n\n#[Caption](path/to/image)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$\n\n@@ Heading 2\n\nText 2\n\n> Quote 2\n\n| Col1 | Col2 | Col3 |\n\n#[Caption 2](path/to/image/2)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$"
         );
         let lexer = Lexer::new(input);
         let tokens = lexer.tokenize()?;
@@ -407,7 +408,7 @@ mod tests {
     #[test]
     fn complex_all_with_newline() -> Result<(), fancy_regex::Error> {
         let input = String::from(
-            "@ Heading\n\nText\n\n> Quote\n\n| Col1 | Col2 | Col3 |\n\n![Caption](path/to/image)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$\n\n@@ Heading 2\n\nText 2\n\n> Quote 2\n\n| Col1 | Col2 | Col3 |\n\n![Caption 2](path/to/image/2)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$\n"
+            "@ Heading\n\nText\n\n> Quote\n\n| Col1 | Col2 | Col3 |\n\n#[Caption](path/to/image)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$\n\n@@ Heading 2\n\nText 2\n\n> Quote 2\n\n| Col1 | Col2 | Col3 |\n\n#[Caption 2](path/to/image/2)\n\n$$$\n#include<iostream>\nint main() {\n\tstd::cout << \"Hello World!\" << std::endl;\n}\n$$$\n"
         );
         let lexer = Lexer::new(input);
         let tokens = lexer.tokenize()?;

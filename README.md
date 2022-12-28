@@ -1,33 +1,35 @@
 # waygum
 
-A simple markup language.
+Custom Markup Language written in Rust.
+
+### Syntax
+
+The syntax is a breed between markdown and latex(more of markdown). Here's a table of syntax:
+| Name                  | Syntax                                                                 | Example Output                                   |
+|-----------------------|------------------------------------------------------------------------|--------------------------------------------------|
+| Section Heading       | @ Hello, World!                                                        | 1 Hello, World                                   |
+| Subsection Heading    | @@ About Me                                                            | 2.1 About Me                                     |
+| Subsubsection Heading | @@@ Info                                                               | 1.1.3 Info                                       |
+| List                  | - Apple                                                                |                                                  |
+| Sublist               | -- Second Level Item                                                   |                                                  |
+| Blockquote            | > Hello! -Me                                                           |                                                  |
+| Code Block            | $$$ _lines_of_code_here_ $$$                                           |                                                  |
+| Table                 | Same as markdown                                                       | The first row is automatically treated as header |
+| Image                 | #\[caption\](link)                                                     |                                                  |
+| Button                | #!\[text\](link)                                                         |                                                  |
+| Styles                | *bold* /Italics/ $code$ _underline_ ~strikethrough~ !\[link-name\](link) |                                                  |
+
+### About
+
+I've written and rewritten this parser multiple times now. After multiple attempts at manually writing a lexer, I've come to realize that doing all that with regex would reduce my headache by about 10 times.
+
+The parser itself doesn't use regex. 
+
+The whole thing is pretty small (~2000 sloc) including the tests, which occupy the most sloc anyway. It's extremely fast being written in rust and all, and this has been a good learning experience for me, learning both about simple languages and rust.
 
 ### How to run?
 
-```
-cargo run -- -i <path/to/input.wg> -s <path/to/style.css>
-```
+I'll be uploading this as a crate soon, so look out for that. In the mean time, you can just clone this repo.
 
-### Screenshot
-
-![Screenshot 2022-12-25 at 3 07 27 PM](https://user-images.githubusercontent.com/119449399/209467324-5e4b5917-ae55-48f7-971c-522fb9f6bb0b.png)
-
-I wrote this language to use day to day instead of markdown. I wrote the lexer and the parser in Rust which helped me with learning the language. It was an interesting learning experience.
-
-The language is written in `.wg` files. The parser/codegen itself doesn't care about the file format so it's just an indication. The codegen converts the `.wg` files into html, the stylesheet can/should be provided.
-
-The supported elements can be found in `grammar.bnf`, but here's the gist:
-
-### Features
-
-- Three levels of headings
-- Infinitely nested lists
-- Styles
-- Quotes
-
-### Maybe?
-
-- Links
-- Images
-
-(These should be very simple to add.)
+To convert a document manually when you clone this repo, you'll need to follow these steps:
+Use the `Document` struct to construct a document object with the `from` function. This takes in the path of the `.wg` file and the path to an optional `css` file. Use the `convert_to_html` method - this should return a string containing the html contents.

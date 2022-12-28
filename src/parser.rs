@@ -379,7 +379,6 @@ impl Parser {
                     table_row.push(self.parse_text(column)?);
                 }
                 table_rows.push(ParseArtefact::TableRow(table_row));
-                self.consume();
             } else {
                 return Err(Box::new(ParseError::UnexpectedEOF));
             }
@@ -890,7 +889,7 @@ mod tests {
     fn parse_multiline_table_with_list() -> Result<(), Box<dyn std::error::Error>> {
         let mut lexer = Lexer::new(
             String::from(
-                "| Hello world! | Hello world! |\n| Hello world! | Hello world! |\n\n* Hello world!"
+                "| Hello world! | Hello world! |\n| Hello world! | Hello world! |\n\n- Hello world!"
             )
         );
         let mut tokens = lexer.tokenize()?;

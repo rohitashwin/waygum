@@ -404,6 +404,27 @@ mod tests {
         );
         Ok(())
     }
+	
+	#[test]
+	fn multiline_table() -> Result<(), fancy_regex::Error> {
+		let input = String::from("@ Heading\n\n| Col1 | Col2 | Col3 |\n| Col4 | Col5 | Col6 |\n");
+		let lexer = Lexer::new(input);
+		let tokens = lexer.tokenize()?;
+		assert_eq!(
+			tokens,
+			vec![
+				Token::Section(String::from("Heading")),
+				Token::Table(
+					vec![String::from("Col1"), String::from("Col2"), String::from("Col3")]
+				),
+				Token::Table(
+					vec![String::from("Col4"), String::from("Col5"), String::from("Col6")]
+				),
+				Token::EOF
+			]
+		);
+		Ok(())
+	}
 
     #[test]
     fn complex_all_with_newline() -> Result<(), fancy_regex::Error> {

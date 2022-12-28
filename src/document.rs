@@ -2,6 +2,8 @@ use super::html::ToHtml;
 use std::fs::File;
 use std::io::prelude::*;
 use regex::Regex;
+use super::lexer;
+use super::parser;
 
 pub struct Document<'a> {
 	input: String,
@@ -35,9 +37,11 @@ impl<'a> Document<'a> {
 	}
 
 	pub fn convert_to_html(&mut self) -> Result<String, Box<dyn std::error::Error>> {
-		let html_contents = self.to_html();
-		self.converted = html_contents;
-		Ok(self.converted.clone())
+		let html_contents = lexer::Lexer::new(self.input.clone()).tokenize()?;
+		let mut html_contents = parser::Parser::new(html_contents);
+		let html_contents = html_contents.parse()?;
+		self.converted = html_contents.iter().map(|x| x.to_html()).collect::<Vec<String>>().join("");
+		Ok(self.to_html())
 	}
 }
 
@@ -60,7 +64,7 @@ impl<'a> ToHtml for Document<'a> {
 	</head>
 	<body>
 		<div id="content">"#);
-		html.push_str(&self.input);
+		html.push_str(&self.converted);
 		html.push_str(r#"</div>
 	</body>
 </html>"#);

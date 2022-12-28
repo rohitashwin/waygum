@@ -18,6 +18,7 @@ impl ToHtml for ParseArtefact {
                 for artefact in text {
                     paragraph_contents.push_str(&artefact.to_html());
                 }
+
                 return format!("<p>{}</p>", paragraph_contents);
             }
             ParseArtefact::List(list) => {
@@ -73,7 +74,7 @@ impl ToHtml for ParseArtefact {
                 );
             }
             ParseArtefact::Button(text, link) => {
-                return format!("<a href=\"{link}\" class=\"md-button\">{text}</a>");
+                return format!("<br><a href=\"{link}\" class=\"md-button\">{text}</a><br>");
             }
             ParseArtefact::Image(caption, link) => {
                 return format!(
@@ -83,6 +84,9 @@ impl ToHtml for ParseArtefact {
             ParseArtefact::Codeblock(code) => {
                 return format!("<pre><code>{code}</code></pre>");
             }
+			ParseArtefact::Newline => {
+				return format!("<br>")
+			}
             _ => {
                 panic!("Unkown artefact type");
             }
@@ -166,7 +170,7 @@ impl<'a> ToHtml for &'a ParseArtefact {
                 );
             }
             ParseArtefact::Button(text, link) => {
-                return format!("<a href=\"{link}\" class=\"md-button\">{text}</a>");
+                return format!("<br><a href=\"{link}\" class=\"md-button\">{text}</a><br>");
             }
             ParseArtefact::Image(caption, link) => {
                 return format!(
@@ -176,6 +180,9 @@ impl<'a> ToHtml for &'a ParseArtefact {
             ParseArtefact::Codeblock(code) => {
                 return format!("<pre><code>{code}</code></pre>");
             }
+			ParseArtefact::Newline => {
+				return format!("<br>")
+			}
             _ => {
                 panic!("Unkown artefact type");
             }

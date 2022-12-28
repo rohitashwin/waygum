@@ -56,6 +56,7 @@ pub enum ParseArtefact {
     Button(String, String),
     Image(String, String),
     Codeblock(String),
+	Newline,
 }
 
 impl Parser {
@@ -85,7 +86,7 @@ impl Parser {
         result
     }
 
-    fn parse(&mut self) -> Result<Vec<ParseArtefact>, Box<dyn std::error::Error>> {
+    pub fn parse(&mut self) -> Result<Vec<ParseArtefact>, Box<dyn std::error::Error>> {
         let mut result = vec![];
         while self.next().is_some() {
             result.extend(self.parse_token()?);
@@ -94,8 +95,7 @@ impl Parser {
     }
 
     fn parse_token(&mut self) -> Result<Vec<ParseArtefact>, Box<dyn std::error::Error>> {
-		let mut title_set = false;
-        match self.next() {
+		match self.next() {
             Some(Token::Section(_)) => self.parse_section(),
             Some(Token::Subsection(_)) => self.parse_subsection(),
             Some(Token::Subsubsection(_)) => self.parse_subsubsection(),
@@ -109,14 +109,14 @@ impl Parser {
             Some(Token::Image { .. }) => Ok(vec![self.parse_image()?]),
             Some(Token::Button { .. }) => Ok(vec![self.parse_button()?]),
             Some(Token::Text(_)) => Ok(vec![self.parse_paragraph()?]),
-            Some(Token::Newline) => {
-                self.consume();
-                Ok(vec![])
-            }
-            _ => {
-                self.consume();
-                Ok(vec![])
-            }
+			Some(Token::Newline) | None => {
+				self.consume();
+				Ok(vec![ParseArtefact::Newline])
+			}
+			Some(Token::EOF) => {
+				self.consume();
+				Ok(vec![])
+			}
         }
     }
 
@@ -395,7 +395,6 @@ impl Parser {
         while let Some(Token::Text(_)) = self.next() {
             if let Token::Text(text) = self.consume().unwrap() {
                 text_contents.push(self.parse_text(text)?);
-                self.consume();
             } else {
                 return Err(Box::new(ParseError::UnexpectedEOF));
             }
@@ -1034,4 +1033,13 @@ $$$
             )
         );
     }
+
+	#[test]
+	fn italics() {
+		let mut lexer = Lexer::new(String::from("@ Learning C++\n/ This is italics /\n"));
+		let mut tokens = lexer.tokenize().unwrap();
+		let mut parser = Parser::new(tokens);
+		let parse_result = parser.parse().unwrap();
+		println!("{:?}", parse_result);
+	}
 }

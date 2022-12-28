@@ -99,7 +99,7 @@ impl Lexer {
             } else if let Some(captures) = TEXT.captures(line)? {
                 let text = captures.get(1).unwrap().as_str().trim().to_string();
                 if text.is_empty() {
-                    continue;
+                    tokens.push(Token::Newline);
                 }
                 tokens.push(Token::Text(text));
             } else {

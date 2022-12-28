@@ -18,9 +18,9 @@ lazy_static! {
     static ref LIST_STATE: Mutex<ListState> = Mutex::new(ListState { current_depth: 1 });
     static ref PARSE_LINE: Mutex<Vec<char>> = Mutex::new(vec![]);
     static ref SECTION_STATE: Mutex<SectionState> = Mutex::new(SectionState {
-        section_number: 1,
-        subsection_number: 1,
-        subsubsection_number: 1,
+        section_number: 0,
+        subsection_number: 0,
+        subsubsection_number: 0,
     });
 }
 
@@ -45,8 +45,8 @@ pub struct Text(pub Vec<TextArtefact>);
 #[derive(Debug, PartialEq)]
 pub enum ParseArtefact {
     Section(usize, String),
-    Subsection(usize, String),
-    Subsubsection(usize, String),
+    Subsection(usize, usize, String),
+    Subsubsection(usize, usize, usize, String),
     Paragraph(Vec<Text>),
     List(Vec<ParseArtefact>),
     ListItem(Text),
@@ -94,6 +94,7 @@ impl Parser {
     }
 
     fn parse_token(&mut self) -> Result<Vec<ParseArtefact>, Box<dyn std::error::Error>> {
+		let mut title_set = false;
         match self.next() {
             Some(Token::Section(_)) => self.parse_section(),
             Some(Token::Subsection(_)) => self.parse_subsection(),
@@ -268,10 +269,10 @@ impl Parser {
                 return Err(Box::new(ParseError::UnexpectedEOF));
             }
         };
-        let section_number = SECTION_STATE.lock()?.section_number;
         SECTION_STATE.lock()?.section_number += 1;
-        SECTION_STATE.lock()?.subsection_number = 1;
-        SECTION_STATE.lock()?.subsubsection_number = 1;
+        let section_number = SECTION_STATE.lock()?.section_number;
+        SECTION_STATE.lock()?.subsection_number = 0;
+        SECTION_STATE.lock()?.subsubsection_number = 0;
         Ok(vec![ParseArtefact::Section(section_number, section_name)])
     }
 
@@ -293,10 +294,11 @@ impl Parser {
                 return Err(Box::new(ParseError::UnexpectedEOF));
             }
         };
-        let subsection_number = SECTION_STATE.lock()?.subsection_number;
         SECTION_STATE.lock()?.subsection_number += 1;
-        SECTION_STATE.lock()?.subsubsection_number = 1;
-        Ok(vec![ParseArtefact::Subsection(subsection_number, subsection_name)])
+        SECTION_STATE.lock()?.subsubsection_number = 0;
+		let section_number = SECTION_STATE.lock()?.section_number;
+        let subsection_number = SECTION_STATE.lock()?.subsection_number;
+        Ok(vec![ParseArtefact::Subsection(section_number, subsection_number, subsection_name)])
     }
 
     fn parse_subsubsection(&mut self) -> Result<Vec<ParseArtefact>, Box<dyn std::error::Error>> {
@@ -317,9 +319,11 @@ impl Parser {
                 return Err(Box::new(ParseError::UnexpectedEOF));
             }
         };
-        let subsubsection_number = SECTION_STATE.lock()?.subsubsection_number;
         SECTION_STATE.lock()?.subsubsection_number += 1;
-        Ok(vec![ParseArtefact::Subsubsection(subsubsection_number, subsubsection_name)])
+		let section_number = SECTION_STATE.lock()?.section_number;
+		let subsection_number = SECTION_STATE.lock()?.subsection_number;
+        let subsubsection_number = SECTION_STATE.lock()?.subsubsection_number;
+		Ok(vec![ParseArtefact::Subsubsection(section_number, subsection_number, subsubsection_number, subsubsection_name)])
     }
 
     fn parse_list(&mut self) -> Result<Vec<ParseArtefact>, Box<dyn std::error::Error>> {
@@ -680,7 +684,7 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let parse_result = parser.parse()?;
         println!("{:?}", parse_result);
-        assert_eq!(parse_result, vec![ParseArtefact::Subsection(1, String::from("Hello world!"))]);
+        assert_eq!(parse_result, vec![ParseArtefact::Subsection(1, 1, String::from("Hello world!"))]);
         Ok(())
     }
 
@@ -693,7 +697,7 @@ mod tests {
         println!("{:?}", parse_result);
         assert_eq!(
             parse_result,
-            vec![ParseArtefact::Subsubsection(1, String::from("Hello world!"))]
+            vec![ParseArtefact::Subsubsection(1, 1, 1, String::from("Hello world!"))]
         );
         Ok(())
     }

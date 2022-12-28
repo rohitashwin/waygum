@@ -17,7 +17,7 @@ The syntax is a breed between markdown and latex(more of markdown). Here's a tab
 | Table                 | Same as markdown                                                       | The first row is automatically treated as header |
 | Image                 | #\[caption\](link)                                                     |                                                  |
 | Button                | #!\[text\](link)                                                         |                                                  |
-| Styles                | *bold* /Italics/ $code$ _underline_ ~strikethrough~ !\[link-name\](link) |                                                  |
+| Styles                | \*bold\* \/Italics\/ \$code\$ \_underline\_ \~strikethrough\~ !\[link-name\](link) |                                                  |
 
 ### About
 

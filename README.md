@@ -25,7 +25,7 @@ The syntax is a breed between markdown and latex(more of markdown). Here's a tab
 
 ### Screenshots
 
-The screenshots show how the code looks and how the generated html looks. The default html codegen doesn't have any styles, this is just one example styling. The styles are extremely and you need to modify very few selectors. 
+The screenshots show how the code looks and how the generated html looks. The default html codegen doesn't have any styles, this is just one example styling. The styling is extremely simple and you need to modify very few selectors. 
 
 > #### Section Heading
 <img width="441" alt="Screenshot 2022-12-29 at 12 07 31 PM" src="https://user-images.githubusercontent.com/119449399/209929668-2b548e1d-f654-4cbb-8201-08973a54f4c9.png">

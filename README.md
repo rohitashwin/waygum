@@ -2,6 +2,9 @@
 
 Custom Markup Language written in Rust.
 
+### How to run?
+```cargo run -- --input <path/to/input.wg> --output <path/to/output.html> [--style <path/to/style.css>]```
+
 ### Why?
 
 I wanted to make a blogging website, and I thought building a custom language that I can write the blogs with would be an interesting experience. I come from C++, and I know the frustrations involved in developing C++ applications. Unlike what many touted as Rust's defining features such as type safety or the borrow checker, I found `cargo`, rust's package manager, to be the most useful one. The former were nice to haves but they can be easily achieved in C++ with good practices, while external libraries is a huge pain in C++, especially with the necessity of build tools such as `make` or `cmake`. In the end, I found writing code in rust to be a very rewarding experience.
